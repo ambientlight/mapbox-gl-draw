@@ -23,6 +23,8 @@ const setupDraw = function(options, api) {
   return api;
 };
 
-module.exports = function(options) {
-  setupDraw(options, this);
+module.exports = {
+  setupDraw: function(options){
+     return setupDraw(options, this);
+  }
 };
