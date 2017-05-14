@@ -3,7 +3,7 @@ const normalize = require('@mapbox/geojson-normalize');
 const hat = require('hat');
 const featuresAt = require('./lib/features_at');
 const stringSetsAreEqual = require('./lib/string_sets_are_equal');
-const geojsonhint = require('@mapbox/geojsonhint');
+//const geojsonhint = require('@mapbox/geojsonhint');
 const Constants = require('./constants');
 const StringSet = require('./lib/string_set');
 
@@ -71,10 +71,10 @@ module.exports = function(ctx, api) {
   };
 
   api.add = function (geojson) {
-    const errors = geojsonhint.hint(geojson, { precisionWarning: false }).filter(e => e.level !== 'message');
-    if (errors.length) {
-      throw new Error(errors[0].message);
-    }
+    // const errors = geojsonhint.hint(geojson, { precisionWarning: false }).filter(e => e.level !== 'message');
+    // if (errors.length) {
+    //   throw new Error(errors[0].message);
+    // }
     const featureCollection = JSON.parse(JSON.stringify(normalize(geojson)));
 
     const ids = featureCollection.features.map(feature => {
