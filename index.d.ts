@@ -1,5 +1,5 @@
 declare namespace MapboxGLDraw {
-    declare function setupDraw(options?: any): any;
+    function setupDraw(options?: any): any;
 }
 
 
