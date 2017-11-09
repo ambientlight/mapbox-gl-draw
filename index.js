@@ -28,3 +28,5 @@ module.exports = {
      return setupDraw(options, this);
   }
 };
+
+module.exports.modes = require('./src/modes');

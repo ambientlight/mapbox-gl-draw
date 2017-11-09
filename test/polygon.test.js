@@ -132,7 +132,7 @@ test('Polygon#updateCoordinate, Polygon#getCoordinate', t => {
 });
 
 test('Polygon integration', t => {
-  const polygonCoordinates = [[[0, 0], [30, 15], [30, 30], [15, 30], [0, 0]]];
+  const polygonCoordinates = [[[0, 0], [30, 15], [32, 35], [15, 30], [0, 0]]];
   const map = createMap();
   const Draw = new MapboxDraw();
   map.addControl(Draw);

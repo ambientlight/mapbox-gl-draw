@@ -6,12 +6,14 @@ import touchTap from './utils/touch_tap';
 import createMap from './utils/create_map';
 import makeMouseEvent from './utils/make_mouse_event';
 import makeTouchEvent from './utils/make_touch_event';
-import CommonSelectors from '../src/lib/common_selectors';
-import drawLineStringMode from '../src/modes/draw_line_string';
+import drawLineStringModeObject from '../src/modes/draw_line_string';
 import LineString from '../src/feature_types/line_string';
 import createMockDrawModeContext from './utils/create_mock_draw_mode_context';
 import createMockLifecycleContext from './utils/create_mock_lifecycle_context';
 import setupAfterNextRender from './utils/after_next_render';
+import objectToMode from '../src/modes/object_to_mode';
+const drawLineStringMode = objectToMode(drawLineStringModeObject);
+
 import {
   enterEvent,
   startPointEvent,
@@ -22,7 +24,9 @@ import {
 
 test('draw_line_string mode initialization', t => {
   const context = createMockDrawModeContext();
-  drawLineStringMode(context);
+  const mode = drawLineStringMode(context);
+  const lifecycleContext = createMockLifecycleContext();
+  mode.start.call(lifecycleContext);
 
   t.equal(context.store.add.callCount, 1, 'store.add called');
 
@@ -43,10 +47,10 @@ test('draw_line_string mode initialization', t => {
 
 test('draw_line_string start', t => {
   const context = createMockDrawModeContext();
-  const lifecycleContext = createMockLifecycleContext();
   const mode = drawLineStringMode(context);
-
+  const lifecycleContext = createMockLifecycleContext();
   mode.start.call(lifecycleContext);
+
   t.equal(context.store.clearSelected.callCount, 1, 'store.clearSelected called');
   t.equal(context.ui.queueMapClasses.callCount, 1, 'ui.queueMapClasses called');
   t.deepEqual(context.ui.queueMapClasses.getCall(0).args, [{ mouse: 'add' }],
@@ -54,15 +58,6 @@ test('draw_line_string start', t => {
   t.equal(context.ui.setActiveButton.callCount, 1, 'ui.setActiveButton called');
   t.deepEqual(context.ui.setActiveButton.getCall(0).args, ['line_string'],
     'ui.setActiveButton received correct arguments');
-
-  t.equal(lifecycleContext.on.callCount, 7, 'this.on called');
-  t.ok(lifecycleContext.on.calledWith('mousemove', CommonSelectors.true));
-  t.ok(lifecycleContext.on.calledWith('click', CommonSelectors.true));
-  t.ok(lifecycleContext.on.calledWith('click', CommonSelectors.isVertex));
-  t.ok(lifecycleContext.on.calledWith('keyup', CommonSelectors.isEscapeKey));
-  t.ok(lifecycleContext.on.calledWith('keyup', CommonSelectors.isEnterKey));
-  t.ok(lifecycleContext.on.calledWith('tap', CommonSelectors.true));
-  t.ok(lifecycleContext.on.calledWith('tap', CommonSelectors.isVertex));
 
   setTimeout(() => {
     t.equal(context.map.doubleClickZoom.disable.callCount, 1);
@@ -73,13 +68,16 @@ test('draw_line_string start', t => {
 test('draw_line_string stop with valid line', t => {
   const context = createMockDrawModeContext();
   const mode = drawLineStringMode(context);
+  const lifecycleContext = createMockLifecycleContext();
+  mode.start.call(lifecycleContext);
 
   // Fake a valid line
-  context._test.line.isValid = () => true;
+  const line = context.store.get(context.store.getAllIds()[0]);
+  line.isValid = () => true;
 
   mode.stop.call();
-  t.equal(context.ui.setActiveButton.callCount, 1, 'ui.setActiveButton called');
-  t.deepEqual(context.ui.setActiveButton.getCall(0).args, [],
+  t.equal(context.ui.setActiveButton.callCount, 2, 'ui.setActiveButton called');
+  t.deepEqual(context.ui.setActiveButton.getCall(1).args, [undefined],
     'ui.setActiveButton received correct arguments');
   t.equal(context.store.delete.callCount, 0, 'store.delete not called');
 
@@ -89,18 +87,21 @@ test('draw_line_string stop with valid line', t => {
 test('draw_line_string stop with invalid line', t => {
   const context = createMockDrawModeContext();
   const mode = drawLineStringMode(context);
+  const lifecycleContext = createMockLifecycleContext();
+  mode.start.call(lifecycleContext);
 
   // Fake an invalid line
-  context._test.line.isValid = () => false;
+  const line = context.store.get(context.store.getAllIds()[0]);
+  line.isValid = () => false;
 
   mode.stop.call();
-  t.equal(context.ui.setActiveButton.callCount, 1, 'ui.setActiveButton called');
-  t.deepEqual(context.ui.setActiveButton.getCall(0).args, [],
+  t.equal(context.ui.setActiveButton.callCount, 2, 'ui.setActiveButton called');
+  t.deepEqual(context.ui.setActiveButton.getCall(1).args, [undefined],
     'ui.setActiveButton received correct arguments');
   t.equal(context.store.delete.callCount, 1, 'store.delete called');
   if (context.store.delete.callCount > 0) {
     t.deepEqual(context.store.delete.getCall(0).args, [
-      [context._test.line.id],
+      [line.id],
       { silent: true }
     ], 'store.delete received correct arguments');
   }
@@ -114,12 +115,16 @@ test('draw_line_string stop with invalid line', t => {
 test('draw_line_string render active line with 0 coordinates', t => {
   const context = createMockDrawModeContext();
   const mode = drawLineStringMode(context);
+  const lifecycleContext = createMockLifecycleContext();
+  mode.start.call(lifecycleContext);
+
+  const line = context.store.get(context.store.getAllIds()[0]);
 
   const memo = [];
   const geojson = {
     type: 'Feature',
     properties: {
-      id: context._test.line.id
+      id: line.id
     },
     geometry: {
       type: 'LineString',
@@ -134,12 +139,16 @@ test('draw_line_string render active line with 0 coordinates', t => {
 test('draw_line_string render active line with 1 coordinate', t => {
   const context = createMockDrawModeContext();
   const mode = drawLineStringMode(context);
+  const lifecycleContext = createMockLifecycleContext();
+  mode.start.call(lifecycleContext);
+
+  const line = context.store.get(context.store.getAllIds()[0]);
 
   const memo = [];
   const geojson = {
     type: 'Feature',
     properties: {
-      id: context._test.line.id
+      id: line.id
     },
     geometry: {
       type: 'LineString',
@@ -154,12 +163,16 @@ test('draw_line_string render active line with 1 coordinate', t => {
 test('draw_line_string render active line with 2 coordinates', t => {
   const context = createMockDrawModeContext();
   const mode = drawLineStringMode(context);
+  const lifecycleContext = createMockLifecycleContext();
+  mode.start.call(lifecycleContext);
+
+  const line = context.store.get(context.store.getAllIds()[0]);
 
   const memo = [];
   const geojson = {
     type: 'Feature',
     properties: {
-      id: context._test.line.id
+      id: line.id
     },
     geometry: {
       type: 'LineString',
@@ -167,11 +180,11 @@ test('draw_line_string render active line with 2 coordinates', t => {
     }
   };
   mode.render(geojson, x => memo.push(x));
-  t.equal(memo.length, 1, 'does render');
-  t.deepEqual(memo[0], {
+  t.equal(memo.length, 2, 'does render');
+  t.deepEqual(memo[1], {
     type: 'Feature',
     properties: {
-      id: context._test.line.id,
+      id: line.id,
       active: 'true',
       meta: 'feature'
     },
@@ -186,6 +199,8 @@ test('draw_line_string render active line with 2 coordinates', t => {
 test('draw_line_string render inactive feature', t => {
   const context = createMockDrawModeContext();
   const mode = drawLineStringMode(context);
+  const lifecycleContext = createMockLifecycleContext();
+  mode.start.call(lifecycleContext);
 
   const memo = [];
   const geojson = {
@@ -234,7 +249,7 @@ test('draw_line_string mouse interaction', t => {
       const line = Draw.getAll().features[0];
       st.equal(line.geometry.type, 'LineString');
 
-      st.deepEqual(line.geometry.coordinates, [[10, 20]], 'starting coordinate added');
+      st.deepEqual(line.geometry.coordinates, [[10, 20], [10, 20]], 'starting coordinate added');
 
       st.end();
     });
@@ -256,7 +271,7 @@ test('draw_line_string mouse interaction', t => {
     t.test('click to add another vertex', st => {
       mouseClick(map, makeMouseEvent(35, 35));
       const line = Draw.getAll().features[0];
-      st.deepEqual(line.geometry.coordinates, [[10, 20], [35, 35]], 'last coordinate replaced');
+      st.deepEqual(line.geometry.coordinates, [[10, 20], [35, 35], [35, 35]], 'last coordinate replaced');
       st.end();
     });
 
@@ -287,7 +302,7 @@ test('draw_line_string mouse interaction', t => {
       mouseClick(map, makeMouseEvent(3, 3));
 
       const line = Draw.getAll().features[0];
-      st.deepEqual(line.geometry.coordinates, [[1, 1], [2, 2], [3, 3]]);
+      st.deepEqual(line.geometry.coordinates, [[1, 1], [2, 2], [3, 3], [3, 3]]);
 
       Draw.trash();
       st.equal(Draw.getAll().features.length, 0, 'no feature added');
@@ -307,7 +322,7 @@ test('draw_line_string mouse interaction', t => {
       mouseClick(map, makeMouseEvent(3, 3));
 
       const line = Draw.getAll().features[0];
-      st.deepEqual(line.geometry.coordinates, [[1, 1], [2, 2], [3, 3]]);
+      st.deepEqual(line.geometry.coordinates, [[1, 1], [2, 2], [3, 3], [3, 3]]);
 
       container.dispatchEvent(escapeEvent);
 
@@ -332,7 +347,7 @@ test('draw_line_string mouse interaction', t => {
       mouseClick(map, makeMouseEvent(3, 3));
 
       const line = Draw.getAll().features[0];
-      st.deepEqual(line.geometry.coordinates, [[1, 1], [2, 2], [3, 3]]);
+      st.deepEqual(line.geometry.coordinates, [[1, 1], [2, 2], [3, 3], [3, 3]]);
 
       container.dispatchEvent(enterEvent);
 
@@ -507,7 +522,7 @@ test('draw_line_string touch interaction', t => {
       const line = Draw.getAll().features[0];
       st.equal(line.geometry.type, 'LineString');
 
-      st.deepEqual(line.geometry.coordinates, [[100, 200]], 'starting coordinate added');
+      st.deepEqual(line.geometry.coordinates, [[100, 200], [100, 200]], 'starting coordinate added');
 
       st.end();
     });
@@ -515,7 +530,7 @@ test('draw_line_string touch interaction', t => {
     t.test('tap to add another vertex', st => {
       touchTap(map, makeTouchEvent(200, 400));
       const line = Draw.getAll().features[0];
-      st.deepEqual(line.geometry.coordinates, [[100, 200], [200, 400]], 'last coordinate replaced');
+      st.deepEqual(line.geometry.coordinates, [[100, 200], [200, 400], [200, 400]], 'last coordinate replaced');
       st.end();
     });
 
@@ -546,7 +561,7 @@ test('draw_line_string touch interaction', t => {
       touchTap(map, makeTouchEvent(300, 300));
 
       const line = Draw.getAll().features[0];
-      st.deepEqual(line.geometry.coordinates, [[100, 100], [200, 200], [300, 300]]);
+      st.deepEqual(line.geometry.coordinates, [[100, 100], [200, 200], [300, 300], [300, 300]]);
 
       Draw.trash();
       st.equal(Draw.getAll().features.length, 0, 'no feature added');
@@ -564,7 +579,9 @@ test('draw_line_string touch interaction', t => {
 
 test('draw_line_string continue LineString', t => {
   const context = createMockDrawModeContext();
-  drawLineStringMode(context);
+  const mode = drawLineStringMode(context);
+  const lifecycleContext = createMockLifecycleContext();
+  mode.start.call(lifecycleContext);
 
   const coordinates = [[0, 0], [5, 5], [10, 10]];
   const geojson = {
@@ -579,41 +596,44 @@ test('draw_line_string continue LineString', t => {
   const line = new LineString(context, geojson);
   context.store.add(line);
   t.throws(
-    () => drawLineStringMode(context, { featureId: 2 }),
+    () => drawLineStringMode(context, { featureId: 2 }).start(lifecycleContext),
     /featureId/,
     'wrong feature id'
   );
   t.throws(
-    () => drawLineStringMode(context, { featureId: 1 }),
+    () => drawLineStringMode(context, { featureId: 1 }).start(lifecycleContext),
     /from.*property/,
     'no "from" prop'
   );
   t.throws(
-    () => drawLineStringMode(context, { featureId: 1, from: '[0, 0]' }),
+    () => drawLineStringMode(context, { featureId: 1, from: '[0, 0]' }).start.call(lifecycleContext),
     /from.*property/,
     'incorrect from prop'
   );
   t.throws(
-    () => drawLineStringMode(context, { featureId: 1, from: [-1, -1] }),
+    () => drawLineStringMode(context, { featureId: 1, from: [-1, -1] }).start.call(lifecycleContext),
     /start or the end/,
     'not on line'
   );
   t.throws(
-    () => drawLineStringMode(context, { featureId: 1, from: [5, 5] }),
+    () => drawLineStringMode(context, { featureId: 1, from: [5, 5] }).start.call(lifecycleContext),
     /start or the end/,
     'not at line endpoint'
   );
-  drawLineStringMode(context, { featureId: 1, from: [0, 0] });
-  t.equal(context._test.line.id, 1, 'initialized with correct line');
-  t.deepEqual(context._test.line.coordinates, [[0, 0], ...coordinates],
+  drawLineStringMode(context, { featureId: 1, from: [0, 0] }).start.call(lifecycleContext);
+
+  let testLine = context.store.get(context.store.getAllIds()[0]);
+  t.equal(testLine.id, 1, 'initialized with correct line');
+  t.deepEqual(testLine.coordinates, [[0, 0], ...coordinates],
     'added one coordinate at the start endpoint');
 
-  drawLineStringMode(context, { featureId: 1, from: [10, 10] });
-  t.deepEqual(context._test.line.coordinates, [[0, 0], ...coordinates, [10, 10]],
+  drawLineStringMode(context, { featureId: 1, from: [10, 10] }).start.call(lifecycleContext);
+  testLine = context.store.get(context.store.getAllIds()[0]);
+  t.deepEqual(testLine.coordinates, [[0, 0], ...coordinates, [10, 10]],
     'added one coordinate at the end endpoint');
 
   t.doesNotThrow(
-    () => drawLineStringMode(context, { featureId: 1, from: { type: 'Point', coordinates: [0, 0] } }),
+    () => drawLineStringMode(context, { featureId: 1, from: { type: 'Point', coordinates: [0, 0] } }).start.call(lifecycleContext),
     'initializes with Point'
   );
 
@@ -621,7 +641,7 @@ test('draw_line_string continue LineString', t => {
     () => drawLineStringMode(context, {
       featureId: 1,
       from: { type: 'Feature', geometry: { type: 'Point', coordinates: [0, 0] }, properties: {} }
-    }),
+    }).start.call(lifecycleContext),
     'initializes with a Feature<Point>'
   );
 
@@ -658,7 +678,7 @@ test('draw_line_string continue LineString mouseClick', t => {
       mouseClick(map, makeMouseEvent(12, 12));
       afterNextRender(() => {
         const line = Draw.getAll().features[0];
-        t.deepEqual(line.geometry.coordinates, [[-1, -1], ...coordinates, [12, 12]], 'line continues from the end');
+        t.deepEqual(line.geometry.coordinates, [[-1, -1], ...coordinates, [12, 12], [12, 12]], 'line continues from the end');
       });
     });
   });

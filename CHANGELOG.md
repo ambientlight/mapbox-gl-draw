@@ -1,3 +1,37 @@
+## 1.0.2
+
+- Fixes double click when drawing a line or polygon crashing bug (#680 via @AliceR)
+- Adds support for mapbox-gl@0.39.0
+- Adds support for mapbox-gl@0.40.0
+
+## 1.0.1
+
+- Moves some of the doc files around which fixes a bug with webpack (#675)
+
+## 1.0.0
+
+- Adds [Custom Mode support](https://github.com/mapbox/mapbox-gl-draw/blob/master/docs/MODES.md)
+- Drops `static` mode, which can now be found [in its own repo](https://github.com/mapbox/mapbox-gl-draw-static-mode)
+- Fixes bug where `MapboxDraw` would prevent `MapboxGeocoder` delete actions (#673)
+
+## 0.19.1
+
+- Fixes bug with safari where the map would move when drawing (#665).
+
+## 0.19.0
+
+- Improves mobile data support (thanks @z0d14c)
+- Adds support for mapbox-gl@0.38.0
+
+## 0.18.1
+
+- Fixes bug with draw controls adding `false` to the tooltip when keybinding are turned off
+
+## 0.18.0
+
+- Add support for mapbox-gl@0.37.0
+- Fix empty dist/mapbox-gl-draw.js file
+
 ## 0.17.4
 
 - Fix bug where selected points that are moved would still return the same coordinates
