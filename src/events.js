@@ -44,6 +44,7 @@ module.exports = function(ctx) {
     if (button === 1) {
       return events.mousedrag(event);
     }
+
     const target = getFeaturesAndSetCursor(event, ctx);
     event.featureTarget = target;
     currentMode.mousemove(event);
@@ -174,7 +175,7 @@ module.exports = function(ctx) {
     }
     currentModeName = modename;
     const mode = modebuilder(ctx, nextModeOptions);
-    currentMode = setupModeHandler(mode, ctx);
+    currentMode = setupModeHandler(mode, modename, ctx);
 
     if (!eventOptions.silent) {
       ctx.map.fire(Constants.events.MODE_CHANGE, { mode: modename});
@@ -203,7 +204,7 @@ module.exports = function(ctx) {
   const api = {
     start: function() {
       currentModeName = ctx.options.defaultMode;
-      currentMode = setupModeHandler(modes[currentModeName](ctx), ctx);
+      currentMode = setupModeHandler(modes[currentModeName](ctx), currentModeName, ctx);
     },
     changeMode,
     actionable,

@@ -1,5 +1,5 @@
 
-const ModeHandler = function(mode, DrawContext) {
+const ModeHandler = function(mode, modename, DrawContext) {
 
   const handlers = {
     drag: [],
@@ -79,7 +79,9 @@ const ModeHandler = function(mode, DrawContext) {
       delegate('click', event);
     },
     mousemove: function(event) {
-      delegate('mousemove', event);
+      if(modename != 'simple_select'){
+        delegate('mousemove', event);
+      }
     },
     mousedown: function(event) {
       delegate('mousedown', event);
