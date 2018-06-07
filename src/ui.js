@@ -99,11 +99,20 @@ module.exports = function(ctx) {
 
     if (!controls) return controlGroup;
 
+    const titles = {
+      line: { default: 'LineString tool', ru: 'Линия', zh: '畫線段' },
+      polygon: { default: 'Polygon tool', ru: 'Полигон', zh: '畫多邊形' },
+      marker: { default: 'Marker tool', ru: 'Маркер', zh: '畫點位' },
+      delete: { default: 'Delete', ru: 'Удалить', zh: '刪除' },
+      combine: { default: 'Combine', ru: 'Объединять', zh: '結合圖形' },
+      uncombine: { default: 'Uncombine', ru: 'Расформировывать', zh: '分開圖形' }
+    }
+
     if (controls[Constants.types.LINE]) {
       buttonElements[Constants.types.LINE] = createControlButton(Constants.types.LINE, {
         container: controlGroup,
         className: Constants.classes.CONTROL_BUTTON_LINE,
-        title: `LineString tool ${ctx.options.keybindings ? '(l)' : ''}`,
+        title: `${ENV.locale ? titles.line[ENV.locale] || titles.line.default : titles.line.default } ${ctx.options.keybindings ? '(l)' : ''}`,
         onActivate: () => ctx.events.changeMode(Constants.modes.DRAW_LINE_STRING)
       });
     }
@@ -112,7 +121,7 @@ module.exports = function(ctx) {
       buttonElements[Constants.types.POLYGON] = createControlButton(Constants.types.POLYGON, {
         container: controlGroup,
         className: Constants.classes.CONTROL_BUTTON_POLYGON,
-        title: `Polygon tool ${ctx.options.keybindings ? '(p)' : ''}`,
+        title: `${ENV.locale ? titles.polygon[ENV.locale] || titles.polygon.default : titles.polygon.default } ${ctx.options.keybindings ? '(p)' : ''}`,
         onActivate: () => ctx.events.changeMode(Constants.modes.DRAW_POLYGON)
       });
     }
@@ -121,7 +130,7 @@ module.exports = function(ctx) {
       buttonElements[Constants.types.POINT] = createControlButton(Constants.types.POINT, {
         container: controlGroup,
         className: Constants.classes.CONTROL_BUTTON_POINT,
-        title: `Marker tool ${ctx.options.keybindings ? '(m)' : ''}`,
+        title: `${ENV.locale ? titles.marker[ENV.locale] || titles.marker.default : titles.marker.default } ${ctx.options.keybindings ? '(m)' : ''}`,
         onActivate: () => ctx.events.changeMode(Constants.modes.DRAW_POINT)
       });
     }
@@ -130,7 +139,7 @@ module.exports = function(ctx) {
       buttonElements.trash = createControlButton('trash', {
         container: controlGroup,
         className: Constants.classes.CONTROL_BUTTON_TRASH,
-        title: 'Delete',
+        title: ENV.locale ? titles.delete[ENV.locale] || titles.delete.default : titles.delete.default,
         onActivate: () => {
           ctx.events.trash();
         }
@@ -141,7 +150,7 @@ module.exports = function(ctx) {
       buttonElements.combine_features = createControlButton('combineFeatures', {
         container: controlGroup,
         className: Constants.classes.CONTROL_BUTTON_COMBINE_FEATURES,
-        title: 'Combine',
+        title: ENV.locale ? titles.combine[ENV.locale] || titles.combine.default : titles.combine.default,
         onActivate: () => {
           ctx.events.combineFeatures();
         }
@@ -152,7 +161,7 @@ module.exports = function(ctx) {
       buttonElements.uncombine_features = createControlButton('uncombineFeatures', {
         container: controlGroup,
         className: Constants.classes.CONTROL_BUTTON_UNCOMBINE_FEATURES,
-        title: 'Uncombine',
+        title: ENV.locale ? titles.uncombine[ENV.locale] || titles.uncombine.default : titles.uncombine.default,
         onActivate: () => {
           ctx.events.uncombineFeatures();
         }
